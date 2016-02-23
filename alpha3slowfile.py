@@ -8,7 +8,6 @@
 Пока что в программе не везде, где надо используется рандом(при выборе вопроса)
 Версию стоит проверить на баги
 Пока что программа работает очень медленно(некоторые действия выполняются за O(n*n) вместо O(1)
-В программе более не используется двумерный массив [животное][признак], его функцию выполняет таблица CORRELATIONS
 Скоро добавим индексы.
 Над всеми этими моментами будем работать.
 Заметка о багах номер один: не стоит называть столбец INDEX
@@ -56,6 +55,7 @@ for row in charname:
 cm = conn1.execute("SELECT count(*) from CHARACTERISTICS") # количество признаков
 m = cm.fetchone()[0];
 corr = conn1.execute("SELECT * from CORRELATIONS")
+a = [[0] * 500 for i in range(501)]  # матрица признаков: 1 = да, 0 = не знаю, -1 = нет
 inddd = [[0] * 500 for i in range(501)] # матрица id пар (животное, признак) в последней таблице(пока не используется)
 vop = min(lim, m);                   # количество вопросов
 used = [0] * 500                     # использован ли данный вопрос
@@ -193,8 +193,10 @@ else:
         n = n + 1
         #l1.append(s3)
         conn1.execute("INSERT INTO ANIMALS VALUES (:s3)",{"s3": s3})
+        for i in range(0,m):
+            conn1.execute("INSERT INTO CORRELATIONS VALUES (:a,:b,:c)",{"a": n - 1, "b": i, "c": 0})
         for i in range(0,vop):
-            conn1.execute("INSERT INTO CORRELATIONS VALUES (:a,:b,:c)",{"a": n - 1, "b": answ[0][i],"c": answ[1][i]})
+            conn1.execute("UPDATE CORRELATIONS SET IND = :c WHERE IDCRE = :a AND IDCHAR = :b",{"a": n - 1, "b": answ[0][i],"c": answ[1][i]})
         # Теперь признак добавить просим
         print("Введите признак, которым данное животное имеет или не имеет")
         print("Желательно,чтобы Вы знали, имеет ли животное этот признак")
@@ -206,6 +208,8 @@ else:
         if (bo == 0):
             #l2.append(s4)
             conn1.execute("INSERT INTO CHARACTERISTICS VALUES (:s4)",{"s4": s4})
+            for i in range(0,n):
+                conn1.execute("INSERT INTO CORRELATIONS VALUES (:a,:b,:c)",{"a": i, "b": m - 1, "c": 0})
             print("Вы добавили новый признак!")
             print("Мне бы очень хотелось узнать, какие животные им обладают...")
             print("Поэтому я задам Вам несколько вопросов")
@@ -243,4 +247,3 @@ else:
                     #a[indd][m] = 0
                     conn1.execute("UPDATE CORRELATIONS SET IND = :w WHERE IDCRE = :u AND IDCHAR= :v",{"w": 0,"u": indd,"v": m})
             m = m + 1
-
